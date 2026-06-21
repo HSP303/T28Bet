@@ -12,6 +12,40 @@ import { logger } from '../logger';
 
 const router = Router();
 
+async function createBetSynchronously(params: {
+  userId: string;
+  matchId: string;
+  market: 'home' | 'draw' | 'away';
+  amount: number;
+  oddsSnapshot: number;
+  potentialReturn: number;
+}): Promise<void> {
+  const { userId, matchId, market, amount, oddsSnapshot, potentialReturn } = params;
+
+  const match = await Match.findById(matchId);
+  if (!match) {
+    throw new Error('Partida não encontrada');
+  }
+
+  const bet = await Bet.create({
+    userId,
+    matchId,
+    market,
+    amount,
+    odds: oddsSnapshot,
+    potentialReturn,
+    status: 'pending',
+  });
+
+  await Transaction.create({
+    userId,
+    type: 'bet',
+    amount,
+    description: `Aposta em ${match.homeTeam} vs ${match.awayTeam} — mercado ${market}`,
+    relatedBetId: bet._id,
+  });
+}
+
 // Rate limiter for bet creation
 const betLimiter = rateLimit({
   windowMs: 1000, // 1 second
@@ -104,30 +138,19 @@ router.post('/', authMiddleware, betLimiter, async (req: Request, res: Response)
         res.status(202).json({ message: 'Aposta recebida' });
         return;
       } catch (sqsErr) {
-        // SQS failed — rollback balance and return error
-        logger.error({ err: sqsErr }, 'Erro ao enviar aposta para SQS — revertendo saldo');
-        await User.findByIdAndUpdate(userId, { $inc: { balance: numAmount } });
-        throw sqsErr;
+        // SQS failed — keep the bet by falling back to synchronous processing.
+        logger.error({ err: sqsErr }, 'Erro ao enviar aposta para SQS — usando fallback síncrono');
       }
     }
 
-    // Fallback: create bet synchronously (when SQS is not configured)
-    const bet = await Bet.create({
+    // Fallback: create bet synchronously (when SQS is not configured or unavailable).
+    await createBetSynchronously({
       userId,
       matchId,
       market,
       amount: numAmount,
-      odds: oddsSnapshot,
+      oddsSnapshot,
       potentialReturn,
-      status: 'pending',
-    });
-
-    await Transaction.create({
-      userId,
-      type: 'bet',
-      amount: numAmount,
-      description: `Aposta em ${match.homeTeam} vs ${match.awayTeam} — mercado ${market}`,
-      relatedBetId: bet._id,
     });
 
     // Publish balance update via Redis WebSocket
@@ -140,10 +163,10 @@ router.post('/', authMiddleware, betLimiter, async (req: Request, res: Response)
       logger.error({ err: redisErr }, 'Erro ao publicar balance_update no Redis');
     }
 
-    res.status(201).json({ bet });
+    res.status(201).json({ message: 'Aposta registrada com sucesso' });
   } catch (err) {
     logger.error({ err }, 'Erro ao realizar aposta');
-    throw err;
+    res.status(500).json({ message: 'Erro interno do servidor' });
   }
 });
 
