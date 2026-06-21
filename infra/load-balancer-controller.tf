@@ -41,4 +41,29 @@ resource "helm_release" "aws_load_balancer_controller" {
     name  = "replicaCount"
     value = "1"
   }
+
+  set {
+    name  = "hostNetwork"
+    value = "true"
+  }
+
+  set {
+    name  = "dnsPolicy"
+    value = "ClusterFirstWithHostNet"
+  }
+
+  set {
+    name  = "enableShield"
+    value = "false"
+  }
+
+  set {
+    name  = "enableWaf"
+    value = "false"
+  }
+
+  set {
+    name  = "enableWafv2"
+    value = "false"
+  }
 }

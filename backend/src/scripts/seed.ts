@@ -69,8 +69,20 @@ async function seed(): Promise<void> {
   const mongoUri = process.env.MONGO_URI ?? 'mongodb://localhost:27017/t28bet';
 
   console.log('Conectando ao MongoDB...');
-  await mongoose.connect(mongoUri);
-  console.log('MongoDB conectado');
+  for (let attempt = 1; attempt <= 10; attempt += 1) {
+    try {
+      await mongoose.connect(mongoUri);
+      console.log('MongoDB conectado');
+      break;
+    } catch (err) {
+      console.error(`Falha ao conectar ao MongoDB (tentativa ${attempt}/10)`);
+      if (attempt === 10) {
+        throw err;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
+  }
 
   // Create admin user if not exists
   const adminEmail = 'admin@t28bet.com';

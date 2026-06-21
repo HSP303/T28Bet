@@ -35,6 +35,10 @@ output "frontend_image_uri" {
   value = "${aws_ecr_repository.frontend.repository_url}:latest"
 }
 
+output "redis_url" {
+  value = format("redis://%s:%d", aws_elasticache_replication_group.redis.primary_endpoint_address, aws_elasticache_replication_group.redis.port)
+}
+
 output "sqs_bets_queue_url" {
   value = aws_sqs_queue.bets.url
 }

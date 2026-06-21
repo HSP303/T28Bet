@@ -20,6 +20,8 @@ kubectl apply -f "$ROOT_DIR/k8s/namespace.yaml"
 kubectl apply -f "$ROOT_DIR/k8s/configmap.yaml"
 kubectl apply -f "$ROOT_DIR/k8s/secret.yaml"
 kubectl apply -f "$ROOT_DIR/k8s/backend/serviceaccount.yaml"
+kubectl delete job t28bet-seed -n t28bet --ignore-not-found
+kubectl delete statefulset mongo -n t28bet --ignore-not-found
 kubectl apply -f "$ROOT_DIR/k8s/mongo/service.yaml"
 kubectl apply -f "$ROOT_DIR/k8s/mongo/statefulset.yaml"
 kubectl apply -f "$ROOT_DIR/k8s/backend/service.yaml"

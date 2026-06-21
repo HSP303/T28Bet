@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { RedisStore } from 'rate-limit-redis';
 import { Bet } from '../models/Bet';
 import { Transaction } from '../models/Transaction';
@@ -18,7 +18,7 @@ const betLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.user?.id ?? (req.ip ?? 'unknown'),
+  keyGenerator: (req) => req.user?.id ?? ipKeyGenerator(req.ip ?? 'unknown'),
   message: { message: 'Muitas apostas em sequência. Aguarde um momento.' },
   store: new RedisStore({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

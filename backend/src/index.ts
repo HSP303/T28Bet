@@ -68,16 +68,27 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 
-async function bootstrap(): Promise<void> {
-  // Connect MongoDB
+async function connectMongoWithRetry(maxAttempts = 10, delayMs = 3000): Promise<void> {
   const mongoUri = process.env.MONGO_URI ?? 'mongodb://localhost:27017/t28bet';
-  try {
-    await mongoose.connect(mongoUri);
-    logger.info('MongoDB conectado');
-  } catch (err) {
-    logger.error({ err }, 'Falha ao conectar ao MongoDB');
-    process.exit(1);
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      await mongoose.connect(mongoUri);
+      logger.info({ attempt }, 'MongoDB conectado');
+      return;
+    } catch (err) {
+      logger.error({ err, attempt, maxAttempts }, 'Falha ao conectar ao MongoDB');
+      if (attempt === maxAttempts) {
+        throw err;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
   }
+}
+
+async function bootstrap(): Promise<void> {
+  await connectMongoWithRetry();
 
   // Connect Redis
   await connectRedis();
