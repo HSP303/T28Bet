@@ -4,16 +4,15 @@ metadata:
   name: t28bet-ingress
   namespace: t28bet
   annotations:
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      proxy_set_header Upgrade $http_upgrade;
-      proxy_set_header Connection "upgrade";
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=3600
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
 spec:
-  ingressClassName: nginx
+  ingressClassName: alb
   rules:
-    - host: t28bet.local
-      http:
+    - http:
         paths:
           - path: /api
             pathType: Prefix

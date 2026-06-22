@@ -8,5 +8,5 @@ data:
   LOG_LEVEL: "info"
   AWS_REGION: "us-east-1"
   JWT_EXPIRES_IN: "24h"
-  # SQS/SNS endpoints: empty means real AWS.
-  # Terraform will provide queue URLs and topic ARNs via Secrets (see secret.yaml).
+  # Same-host ALB routing in production; local dev uses the CRA proxy.
+  CORS_ORIGIN: "*"

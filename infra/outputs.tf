@@ -19,7 +19,7 @@ output "eks_cluster_name" {
 }
 
 output "eks_cluster_endpoint" {
-  value = aws_eks_cluster.this.endpoint
+  value     = aws_eks_cluster.this.endpoint
   sensitive = true
 }
 
@@ -27,20 +27,20 @@ output "kubectl_config_command" {
   value = "aws eks update-kubeconfig --region ${var.aws_region} --name ${aws_eks_cluster.this.name}"
 }
 
-output "rds_postgres_endpoint" {
-  value = aws_db_instance.postgres.address
+output "backend_image_uri" {
+  value = "${aws_ecr_repository.backend.repository_url}:latest"
 }
 
-output "rds_postgres_port" {
-  value = aws_db_instance.postgres.port
+output "frontend_image_uri" {
+  value = "${aws_ecr_repository.frontend.repository_url}:latest"
 }
 
-output "dynamodb_table_name" {
-  value = aws_dynamodb_table.app.name
+output "sqs_bets_queue_url" {
+  value = aws_sqs_queue.bets.url
 }
 
-output "sqs_queue_url" {
-  value = aws_sqs_queue.app.url
+output "sqs_settlement_queue_url" {
+  value = aws_sqs_queue.settlement.url
 }
 
 output "sns_topic_arn" {

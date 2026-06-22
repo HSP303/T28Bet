@@ -1,8 +1,11 @@
 resource "helm_release" "aws_load_balancer_controller" {
-  name       = "aws-load-balancer-controller"
-  namespace  = "kube-system"
-  repository = "https://aws.github.io/eks-charts"
-  chart      = "aws-load-balancer-controller"
+  name            = "aws-load-balancer-controller"
+  namespace       = "kube-system"
+  repository      = "https://aws.github.io/eks-charts"
+  chart           = "aws-load-balancer-controller"
+  atomic          = true
+  cleanup_on_fail = true
+  timeout         = 1800
 
   set {
     name  = "clusterName"
@@ -30,12 +33,12 @@ resource "helm_release" "aws_load_balancer_controller" {
   }
 
   set {
-    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-    value = aws_iam_role.aws_load_balancer_controller.arn
+    name  = "enableServiceMutatorWebhook"
+    value = "false"
   }
 
-  depends_on = [
-    aws_eks_node_group.default,
-    aws_iam_role_policy_attachment.aws_load_balancer_controller
-  ]
+  set {
+    name  = "replicaCount"
+    value = "1"
+  }
 }

@@ -27,7 +27,8 @@ export function useWebSocket(token: string | null, options: UseWebSocketOptions)
   const connect = useCallback(() => {
     if (!token || !mountedRef.current) return;
 
-    const ws = new WebSocket(`ws://localhost:3001/ws?token=${token}`);
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${wsProtocol}//${window.location.host}/ws?token=${token}`);
     wsRef.current = ws;
 
     ws.onopen = () => {

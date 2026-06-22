@@ -11,6 +11,11 @@ In the project directory, you can run:
 Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
+The app calls the backend on relative paths (`/api` and `/ws`), which means:
+
+- in local development, the CRA proxy forwards those requests to `http://localhost:3001`;
+- in EKS, the same ALB host routes `/` to the frontend and `/api`/`ws` to the backend.
+
 The page will reload if you make edits.\
 You will also see any lint errors in the console.
 

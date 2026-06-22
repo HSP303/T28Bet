@@ -22,16 +22,22 @@ spec:
           volumeMounts:
             - name: mongo-data
               mountPath: /data/db
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
           readinessProbe:
             exec:
               command: ["mongosh", "--eval", "db.adminCommand('ping')", "--quiet"]
             initialDelaySeconds: 10
             periodSeconds: 10
-  volumeClaimTemplates:
-    - metadata:
-        name: mongo-data
-      spec:
-        accessModes: ["ReadWriteOnce"]
-        resources:
-          requests:
-            storage: 5Gi
+          volumeMounts:
+            - name: mongo-data
+              mountPath: /data/db
+      volumes:
+        - name: mongo-data
+          emptyDir:
+            sizeLimit: 1Gi

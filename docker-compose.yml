@@ -103,6 +103,7 @@ services:
       PORT: 3001
       MONGO_URI: mongodb://mongo:27017/t28bet
       REDIS_URL: redis://redis:6379
+      CORS_ORIGIN: http://localhost:3000
       SQS_ENDPOINT: http://elasticmq:9324
       SQS_BETS_QUEUE_URL: http://elasticmq:9324/000000000000/t28bet-bets
       SQS_SETTLEMENT_QUEUE_URL: http://elasticmq:9324/000000000000/t28bet-settlement

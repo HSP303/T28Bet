@@ -3,6 +3,9 @@ kind: Service
 metadata:
   name: backend-svc
   namespace: t28bet
+  annotations:
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
 spec:
   selector:
     app: backend

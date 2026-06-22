@@ -15,8 +15,9 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: t28bet-frontend:latest
-          imagePullPolicy: IfNotPresent
+          # Use `terraform output -raw frontend_image_uri` after pushing to ECR.
+          image: REPLACE_WITH_FRONTEND_ECR_IMAGE_URI
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           resources:

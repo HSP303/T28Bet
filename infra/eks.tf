@@ -7,7 +7,7 @@ resource "aws_cloudwatch_log_group" "eks_cluster" {
 
 resource "aws_eks_cluster" "this" {
   name     = local.name
-  role_arn = aws_iam_role.eks_cluster.arn
+  role_arn = data.aws_iam_role.eks_cluster.arn
   version  = var.eks_version
 
   access_config {
@@ -32,61 +32,14 @@ resource "aws_eks_cluster" "this" {
   tags = local.common_tags
 
   depends_on = [
-    aws_iam_role_policy_attachment.eks_cluster_policy,
     aws_cloudwatch_log_group.eks_cluster
   ]
-}
-
-resource "aws_eks_addon" "vpc_cni" {
-  cluster_name                = aws_eks_cluster.this.name
-  addon_name                  = "vpc-cni"
-  resolve_conflicts_on_create = "OVERWRITE"
-  resolve_conflicts_on_update = "OVERWRITE"
-
-  depends_on = [aws_eks_node_group.default]
-}
-
-resource "aws_eks_addon" "kube_proxy" {
-  cluster_name                = aws_eks_cluster.this.name
-  addon_name                  = "kube-proxy"
-  resolve_conflicts_on_create = "OVERWRITE"
-  resolve_conflicts_on_update = "OVERWRITE"
-
-  depends_on = [aws_eks_node_group.default]
-}
-
-resource "aws_eks_addon" "coredns" {
-  cluster_name                = aws_eks_cluster.this.name
-  addon_name                  = "coredns"
-  resolve_conflicts_on_create = "OVERWRITE"
-  resolve_conflicts_on_update = "OVERWRITE"
-
-  depends_on = [aws_eks_node_group.default]
-}
-
-resource "aws_eks_addon" "ebs_csi" {
-  cluster_name                = aws_eks_cluster.this.name
-  addon_name                  = "aws-ebs-csi-driver"
-  resolve_conflicts_on_create = "OVERWRITE"
-  resolve_conflicts_on_update = "OVERWRITE"
-
-  depends_on = [aws_eks_node_group.default]
-}
-
-resource "aws_eks_addon" "cloudwatch_observability" {
-  count                       = var.enable_cloudwatch_observability_addon ? 1 : 0
-  cluster_name                = aws_eks_cluster.this.name
-  addon_name                  = "amazon-cloudwatch-observability"
-  resolve_conflicts_on_create = "OVERWRITE"
-  resolve_conflicts_on_update = "OVERWRITE"
-
-  depends_on = [aws_eks_node_group.default]
 }
 
 resource "aws_eks_node_group" "default" {
   cluster_name    = aws_eks_cluster.this.name
   node_group_name = "${local.name}-nodes"
-  node_role_arn   = aws_iam_role.eks_node.arn
+  node_role_arn   = data.aws_iam_role.eks_node.arn
   subnet_ids      = values(aws_subnet.private)[*].id
 
   instance_types = var.node_instance_types
@@ -110,11 +63,4 @@ resource "aws_eks_node_group" "default" {
   tags = merge(local.common_tags, {
     Name = "${local.name}-nodes"
   })
-
-  depends_on = [
-    aws_iam_role_policy_attachment.eks_node_worker,
-    aws_iam_role_policy_attachment.eks_node_cni,
-    aws_iam_role_policy_attachment.eks_node_ecr,
-    aws_iam_role_policy_attachment.eks_node_cloudwatch
-  ]
 }
