@@ -12,7 +12,7 @@ data "archive_file" "lambda_settlement_zip" {
 
 data "archive_file" "mongoose_layer_zip" {
   type        = "zip"
-  source_dir  = "${path.module}/../lambda/settlement/layer-mongoose/nodejs"
+  source_dir  = "${path.module}/../lambda/settlement/layer-mongoose"
   output_path = "${path.module}/mongoose_layer.zip"
 }
 
@@ -93,6 +93,7 @@ resource "aws_lambda_function" "settlement" {
   environment {
     variables = {
       MONGO_URI             = format("mongodb://%s:27017/t28bet", try(data.external.mongo_lb.result.hostname, ""))
+      REDIS_URL             = format("redis://%s:%d", aws_elasticache_replication_group.redis.primary_endpoint_address, aws_elasticache_replication_group.redis.port)
       SNS_RESULTS_TOPIC_ARN = aws_sns_topic.app.arn
     }
   }

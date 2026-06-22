@@ -2,6 +2,7 @@
 
 const mongoose = require("mongoose");
 const { Bet, Match, Transaction, User } = require("./models");
+const { publishRedisMessage } = require("./redis");
 
 let isConnected = false;
 
@@ -43,9 +44,23 @@ async function settleMatch(matchId, winner) {
       bet.settledAt = new Date();
       await bet.save();
 
-      await User.findByIdAndUpdate(bet.userId, {
-        $inc: { balance: actualReturn },
-      });
+      const updatedUser = await User.findByIdAndUpdate(
+        bet.userId,
+        {
+          $inc: { balance: actualReturn },
+        },
+        { returnDocument: "after" }
+      );
+
+      if (updatedUser && process.env.REDIS_URL) {
+        try {
+          await publishRedisMessage(process.env.REDIS_URL, `balance:${bet.userId.toString()}`, {
+            balance: updatedUser.balance,
+          });
+        } catch (err) {
+          console.error("[settle] Erro ao publicar balance_update no Redis", err);
+        }
+      }
 
       await Transaction.create({
         userId: bet.userId,

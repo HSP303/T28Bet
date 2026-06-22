@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { Bet, Match, Transaction, User } from './models';
+import { publishRedisMessage } from './redis';
 
 export type SettlementWinner = 'home' | 'draw' | 'away';
 
@@ -56,9 +57,23 @@ export async function settleMatch(
       await bet.save();
 
       // Credit user balance atomically
-      await User.findByIdAndUpdate(bet.userId, {
-        $inc: { balance: actualReturn },
-      });
+      const updatedUser = await User.findByIdAndUpdate(
+        bet.userId,
+        {
+          $inc: { balance: actualReturn },
+        },
+        { returnDocument: 'after' }
+      );
+
+      if (updatedUser && process.env.REDIS_URL) {
+        try {
+          await publishRedisMessage(process.env.REDIS_URL, `balance:${bet.userId.toString()}`, {
+            balance: updatedUser.balance,
+          });
+        } catch (err) {
+          console.error('[settle] Erro ao publicar balance_update no Redis', err);
+        }
+      }
 
       // Create prize transaction
       await Transaction.create({

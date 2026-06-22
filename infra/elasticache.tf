@@ -11,6 +11,14 @@ resource "aws_security_group" "redis" {
     security_groups = [aws_eks_cluster.this.vpc_config[0].cluster_security_group_id]
   }
 
+  ingress {
+    description     = "Redis from settlement Lambda security group"
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [aws_security_group.lambda_settlement.id]
+  }
+
   egress {
     description = "Saida liberada"
     from_port   = 0
