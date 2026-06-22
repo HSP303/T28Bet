@@ -14,6 +14,7 @@ Infraestrutura genérica para laboratório AWS.
 - MongoDB no Kubernetes para o backend da aplicação
 - Duas filas SQS: apostas e liquidação
 - SNS para notificações de resultado
+- Lambda de liquidação consumindo a fila `t28bet-settlement` e publicando no SNS
 - Repositórios ECR para backend e frontend
 - CloudWatch Log Groups
 - CloudWatch Alarms básicos
@@ -99,6 +100,7 @@ Fluxo operacional do lab:
 
 ```bash
 ./scripts/update-kubeconfig.sh
+./scripts/cleanup-lb-webhooks.sh
 ./scripts/apply-k8s.sh
 ./scripts/seed.sh
 ./scripts/check-pods.sh
@@ -141,6 +143,7 @@ terraform destroy
 
 - `enable_nat_gateway = true` facilita o funcionamento dos nodes privados, mas NAT Gateway gera custo.
 - O banco principal da aplicação é MongoDB via Kubernetes (`k8s/mongo/*`), usando `MONGO_URI` apontando para `mongo-svc`.
+- O Mongo é exposto também por um NLB interno separado (`mongo-lb-svc`) para a Lambda de liquidação; o Terraform cria esse Service para obter o hostname.
 - Os manifests `k8s/backend/deployment.yaml` e `k8s/frontend/deployment.yaml` usam placeholders de imagem do ECR e devem ser preenchidos com `terraform output -raw backend_image_uri` e `terraform output -raw frontend_image_uri`.
 - O frontend conversa com o backend pelo mesmo host do ALB usando caminhos relativos (`/api` e `/ws`); em local, o CRA proxy repassa essas chamadas para `localhost:3001`.
 - No modelo simples de laboratório, `k8s/configmap.yaml` carrega configurações não sensíveis e `k8s/secret.yaml` carrega os endpoints/segredos manualmente copiados dos outputs do Terraform.

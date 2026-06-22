@@ -8,5 +8,6 @@ data:
   LOG_LEVEL: "info"
   AWS_REGION: "us-east-1"
   JWT_EXPIRES_IN: "24h"
+  ENABLE_SQS_WORKERS: "true"
   # Same-host ALB routing in production; local dev uses the CRA proxy.
   CORS_ORIGIN: "*"

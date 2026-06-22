@@ -103,8 +103,13 @@ async function bootstrap(): Promise<void> {
     });
   });
 
-  // Start SQS workers in background
-  startBetsWorker();
+  // Start the bets worker only when explicitly enabled.
+  // Settlement moved to AWS Lambda.
+  if (process.env.ENABLE_SQS_WORKERS === 'true') {
+    startBetsWorker();
+  } else {
+    logger.info('SQS workers desabilitados nesta instância');
+  }
 
   // Start listening
   server.listen(PORT, () => {

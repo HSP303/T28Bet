@@ -2,6 +2,10 @@ data "aws_iam_roles" "available" {
   path_prefix = "/"
 }
 
+data "aws_iam_role" "lab_role" {
+  name = "LabRole"
+}
+
 locals {
   available_iam_role_names = toset(data.aws_iam_roles.available.names)
 

@@ -51,6 +51,14 @@ output "sns_topic_arn" {
   value = aws_sns_topic.app.arn
 }
 
+output "mongo_service_hostname" {
+  value = try(data.external.mongo_lb.result.hostname, "")
+}
+
+output "mongo_connection_uri" {
+  value = format("mongodb://%s:27017/t28bet", try(data.external.mongo_lb.result.hostname, ""))
+}
+
 output "load_balancer_controller_status_command" {
   value = "kubectl -n kube-system get deploy aws-load-balancer-controller"
 }

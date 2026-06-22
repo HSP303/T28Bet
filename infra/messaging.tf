@@ -8,7 +8,7 @@ resource "aws_sqs_queue" "bets" {
 
 resource "aws_sqs_queue" "settlement" {
   name                       = "${local.name}-settlement"
-  visibility_timeout_seconds = 30
+  visibility_timeout_seconds = 330
   message_retention_seconds  = 345600
 
   tags = local.common_tags

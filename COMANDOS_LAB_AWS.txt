@@ -1,0 +1,52 @@
+PROVISIONAR
+
+cd /home/hsp303/projects/T28Bet
+
+terraform -chdir=infra init
+terraform -chdir=infra validate
+terraform -chdir=infra apply
+
+./scripts/build-and-push-ecr.sh
+./scripts/apply-k8s.sh
+./scripts/seed.sh
+
+ATUALIZAR ACESSO AO CLUSTER
+
+./scripts/update-kubeconfig.sh
+export KUBECONFIG=$HOME/.kube/config
+
+OBTER INFORMACOES DO TERRAFORM
+
+terraform -chdir=infra output
+terraform -chdir=infra output -raw aws_region
+terraform -chdir=infra output -raw eks_cluster_name
+terraform -chdir=infra output -raw backend_image_uri
+terraform -chdir=infra output -raw frontend_image_uri
+terraform -chdir=infra output -raw redis_url
+terraform -chdir=infra output -raw sqs_bets_queue_url
+terraform -chdir=infra output -raw sqs_settlement_queue_url
+terraform -chdir=infra output -raw sns_topic_arn
+terraform -chdir=infra output -raw mongo_connection_uri
+terraform -chdir=infra output -raw mongo_service_hostname
+
+VERIFICAR KUBERNETES
+
+kubectl get nodes
+kubectl -n t28bet get pods -o wide
+kubectl -n t28bet get svc -o wide
+kubectl -n t28bet get ingress t28bet-ingress -o wide
+kubectl -n kube-system get deploy aws-load-balancer-controller
+
+VER LOGS
+
+./scripts/logs.sh backend
+./scripts/logs.sh frontend
+./scripts/logs.sh seed
+
+CHECAGEM RAPIDA
+
+./scripts/check-pods.sh
+
+PEGAR O ENDERECO DO APP
+
+kubectl -n t28bet get ingress t28bet-ingress

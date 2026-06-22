@@ -1,0 +1,9 @@
+{
+  "name": "t28bet-settlement-lambda-conv",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "@aws-sdk/client-sns": "^3.1069.0"
+  }
+}

@@ -5,7 +5,6 @@ import { Bet } from '../models/Bet';
 import { Transaction } from '../models/Transaction';
 import { Match } from '../models/Match';
 import { receiveMessages, deleteMessage } from '../services/sqs';
-import { settleMatch } from '../services/settlement';
 import { logger } from '../logger';
 import mongoose from 'mongoose';
 
@@ -16,11 +15,6 @@ interface BetMessage {
   amount: number;
   oddsSnapshot: number;
   potentialReturn: number;
-}
-
-interface SettlementMessage {
-  matchId: string;
-  winner: 'home' | 'draw' | 'away';
 }
 
 async function processBetMessage(body: BetMessage): Promise<void> {
@@ -51,13 +45,6 @@ async function processBetMessage(body: BetMessage): Promise<void> {
   });
 
   logger.info({ betId: bet._id, userId, matchId }, 'Worker: Aposta processada com sucesso');
-}
-
-async function processSettlementMessage(body: SettlementMessage): Promise<void> {
-  const { matchId, winner } = body;
-
-  const result = await settleMatch(matchId, winner);
-  logger.info({ matchId, winner, ...result }, 'Worker: Liquidação processada com sucesso');
 }
 
 async function pollBetsQueue(): Promise<void> {
@@ -93,45 +80,9 @@ async function pollBetsQueue(): Promise<void> {
   }
 }
 
-async function pollSettlementQueue(): Promise<void> {
-  const settlementQueueUrl = process.env.SQS_SETTLEMENT_QUEUE_URL;
-  if (!settlementQueueUrl) {
-    logger.warn('SQS_SETTLEMENT_QUEUE_URL não configurada — worker de liquidação inativo');
-    return;
-  }
-
-  logger.info({ queueUrl: settlementQueueUrl }, 'Worker de liquidação iniciado');
-
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    try {
-      const messages = await receiveMessages(settlementQueueUrl);
-
-      for (const msg of messages) {
-        if (!msg.Body || !msg.ReceiptHandle) continue;
-
-        try {
-          const body = JSON.parse(msg.Body) as SettlementMessage;
-          await processSettlementMessage(body);
-          await deleteMessage(settlementQueueUrl, msg.ReceiptHandle);
-        } catch (err) {
-          logger.error({ err, messageId: msg.MessageId }, 'Erro ao processar mensagem de liquidação');
-        }
-      }
-    } catch (err) {
-      logger.error({ err }, 'Erro ao receber mensagens SQS de liquidação');
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-    }
-  }
-}
-
 export function startBetsWorker(): void {
   pollBetsQueue().catch((err) => {
     logger.error({ err }, 'Worker de apostas encerrou com erro');
-  });
-
-  pollSettlementQueue().catch((err) => {
-    logger.error({ err }, 'Worker de liquidação encerrou com erro');
   });
 }
 

@@ -4,9 +4,9 @@ metadata:
   name: mongo-svc
   namespace: t28bet
 spec:
+  type: ClusterIP
   selector:
     app: mongo
   ports:
     - port: 27017
       targetPort: 27017
-  type: ClusterIP

@@ -21,6 +21,7 @@ if [[ "$confirmation" != "destroy" ]]; then
 fi
 
 "$ROOT_DIR/scripts/update-kubeconfig.sh"
+"$ROOT_DIR/scripts/cleanup-lb-webhooks.sh"
 
 kubectl delete -f "$ROOT_DIR/k8s/ingress.yaml" --ignore-not-found
 kubectl delete -f "$ROOT_DIR/k8s/frontend/deployment.yaml" --ignore-not-found
